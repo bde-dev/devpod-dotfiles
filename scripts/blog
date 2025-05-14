@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# A bash script that helps me create notes for my blog
+# Extensions:
+# - post    creates a new blog post
+# - convert creates a new blog post from an existing note
+# - test    runs 'hugo server' against the blog repo
+
+POSTSDIR="$BLOG/content/posts"
+
+# generate_frontmatter generates YAML front matter for a file
+generate_frontmatter() {
+  local file="$1"
+  local date=$(date +"%Y-%m-%d")
+
+  # Format the title by removing dashes
+  local title="${file##*/}"                   # Extract filename
+  title="$(echo $title | sed 's/\.[^.]*$//')" # Remove file extension
+  title="${title//-/ }"                       # Replace dashes with spaces
+
+  cat <<EOF >"$file"
+---
+title: $title
+date: $date
+tags:
+- 
+---
+EOF
+
+  echo -e "\n" >>"$file"
+}
+
+# get_filename prompts the user for a filename
+get_filename() {
+  read -p "Enter a filename: " filename
+}
+
+open_file() {
+  file="$POSTSDIR/$1.md"
+
+  touch "$file"
+
+  generate_frontmatter $file
+  # Open the file in Neovim
+  nvim '+ normal 2GzzA' "$file" -c :NoNeckPain
+}
+
+# Check the value of the first parameter
+case "$1" in
+post)
+  echo "Got parameter: $2"
+
+  if [[ -z "$2" ]]; then
+    get_filename
+  else
+    filename="$2"
+  fi
+  echo "Got file name: $filename"
+  open_file "$filename"
+  ;;
+
+convert)
+  if [[ -z "$2" ]]; then
+    get_filename
+  else
+    filename="$2"
+  fi
+
+  echo "Got file: $filename"
+
+  note_path="$filename"
+
+  if [[ ! -f "$note_path" ]]; then
+    echo "File does not exist: $note_path"
+    exit 1
+  fi
+
+  touch "$note_path"
+
+  note_name=$(basename "$note_path" | sed 's/\.[^.]*$//')
+
+  echo "Got note name: $note_name"
+
+  post_path="$POSTSDIR/$note_name.md"
+
+  echo "Got post path: $post_path"
+
+  if [[ -e "$post_path" ]]; then
+    echo "Post already exists: $post_path"
+    exit 1
+  fi
+
+  generate_frontmatter "$post_path"
+
+  cat "$filename" >>"$post_path"
+
+  sed -i '/^\[\[/d' "$post_path"
+
+  echo -e "Converted note to blog post:\n$filename -> $note_path"
+
+  nvim '+ normal 2GzzA' "$post_path" -c :NoNeckPain
+  ;;
+
+test)
+  cd "$BLOG" || exit
+  hugo server
+  ;;
+
+"")
+  # Change to the blog directory if no argument was given
+  cd "$BLOG" || exit
+  ;;
+
+*)
+  # Print an error message if the parameter was not "post", "convert" or "test"
+  echo "Error: Invalid parameter. Usage: blog post|convert|test"
+  ;;
+esac

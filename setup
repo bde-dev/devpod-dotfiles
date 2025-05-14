@@ -1,0 +1,88 @@
+#!/bin/bash
+
+DOTFILES_DIR="$HOME/dotfiles"
+XDG_CONFIG_HOME="$HOME/.config"
+ls $DOTFILES_DIR
+
+create_directories() {
+  local directories=("$@")
+  for dir in "${directories[@]}"; do
+    mkdir -p "$dir"
+  done
+}
+
+create_symlinks() {
+  local items=("$@")
+  for item in "${items[@]}"; do
+    IFS=':' read -r source target <<<"$item"
+    if [ -L "$target" ]; then
+      echo "Removing existing symlink $target"
+      unlink "$target"
+    elif [ -d "$target" ]; then
+      echo "Warning: $target is a directory. Skipping..."
+      continue
+    elif [ -e "$target" ]; then
+      echo "Warning: $target already exists. Skipping..."
+      continue
+    fi
+    ln -s "$DOTFILES_DIR/$source" "$target"
+    echo "Created symlink for $source"
+  done
+}
+
+common_directories=(
+  "$XDG_CONFIG_HOME/alacritty"
+  "$XDG_CONFIG_HOME/alacritty/themes"
+  "$XDG_CONFIG_HOME/k9s"
+)
+
+common_items=(
+  "alacritty.toml:$XDG_CONFIG_HOME/alacritty/alacritty.toml"
+  "k9s/skin.yml:$XDG_CONFIG_HOME/k9s/skin.yml"
+  ".inputrc:$HOME/.inputrc"
+  ".tmux.conf:$HOME/.tmux.conf"
+  "nvim:$XDG_CONFIG_HOME/nvim"
+)
+
+create_directories "${common_directories[@]}"
+create_symlinks "${common_items[@]}"
+
+# Ubuntu specific setup
+
+ln -sf "$PWD/bash/.bash_profile" "$HOME"/.bash_profile
+ln -sf "$PWD/bash/.bashrc" "$HOME"/.bashrc
+
+# Show dotfiles bashrc and source it into script context
+cat ~/.bashrc
+source ~/.bashrc
+
+# get the font out of the way first, it's the most annoying
+# For ubuntu
+mkdir -p $HOME/.local/share/fonts
+cp $PWD/fonts/UbuntuMono* $HOME/.local/share/fonts
+
+# ubuntu PPA repositories
+sudo add-apt-repository ppa:aslatter/ppa -y
+
+# ubuntu packages apt
+sudo apt install ripgrep fd-find curl -y
+
+# ubuntu apt neovim setup
+sudo apt install gcc g++ unzip -y
+
+# ubuntu terminal and multiplexer setup
+sudo apt install alacritty tmux -y
+
+# Download alacritty themes
+mkdir -p ~/.config/alacritty/themes
+git clone https://github.com/alacritty/alacritty-theme ~/.config/alacritty/themes
+
+# ubuntu brew for vim and neovim setup
+brew install fzf starship
+
+# ubuntu brew for neovim setup
+brew install neovim go lazygit
+
+# create symbolic link to neovim from vim when not using neovim on
+# Ubuntu systems, because I use the v alias everywhere.
+sudo ln -sf /usr/bin/vim /usr/bin/nvim

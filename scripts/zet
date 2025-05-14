@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Function to prompt the user for a filename
+get_filename() {
+  read -p "Enter a filename: " filename
+  echo "$filename"
+}
+
+# Function to create a file in the specified directory
+create_file() {
+  local dir="$1"
+  local filename="$2"
+  local filepath="$dir/$filename.md"
+
+  # Change into the directory
+  cd "$dir" || exit 1
+
+  # Create the file
+  touch "$filepath"
+
+  # Format the file
+  {
+    echo "# "
+    echo -en "\n"
+    echo "[[$today]]"
+    echo -en "\n"
+    echo -en "\n"
+    echo -en "\n"
+  } >>"$filepath"
+
+  echo "$filepath" # Output the file path for external use
+}
+
+append_to_daily_note() {
+  local wikilink="[[$filename]]" # wikilink of new zet file
+
+  echo "$wikilink" >>"$daily_note" # Append new zet file wikilink to today's daily note
+}
+
+# Default values
+today="$(gendate)"
+daily_note="$ZETTELKASTEN/daily-notes/$today.md"
+OPEN_FILE=true
+TARGET_DIR="$ZETTELKASTEN/05-inbox"
+
+# Check daily note exists
+if [[ ! -f "$daily_note" ]]; then
+  echo "daily not does not exist - creating"
+  day_bash --no-open
+fi
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --no-open)
+    OPEN_FILE=false
+    shift
+    ;;
+  -*)
+    echo "Unknown option: $1"
+    exit 1
+    ;;
+  *)
+    filename="$1"
+    shift
+    ;;
+  esac
+done
+
+# Prompt the user if no filename is provided
+if [[ -z "$filename" ]]; then
+  filename=$(get_filename)
+fi
+
+# Validate filename
+if [[ -z "$filename" ]]; then
+  echo "Filename cannot be empty."
+  exit 1
+fi
+
+TARGET_PATH="$TARGET_DIR/$filename.md"
+
+# Check if file already exists
+if [[ ! -f "$TARGET_PATH" ]]; then
+  create_file "$TARGET_DIR" "$filename"
+  append_to_daily_note
+else
+  echo "File already exists - not creating new zet note."
+fi
+
+# Open the file in Neovim unless --no-open was specified
+if $OPEN_FILE; then
+  nvim '+ normal ggzz' -c "startinsert!" "$TARGET_PATH" -c :NoNeckPain
+fi
