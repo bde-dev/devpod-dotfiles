@@ -77,6 +77,9 @@ sudo apt install alacritty tmux -y
 mkdir -p ~/.config/alacritty/themes
 git clone https://github.com/alacritty/alacritty-theme ~/.config/alacritty/themes
 
+# Brew was installed with devcontainers features - eval for $PATH
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
 # ubuntu brew for vim and neovim setup
 brew install fzf starship
 
