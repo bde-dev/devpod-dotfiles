@@ -66,14 +66,8 @@ sudo apt update
 # ubuntu PPA repositories
 sudo add-apt-repository ppa:aslatter/ppa -y
 
-# ubuntu packages apt
-sudo apt install ripgrep fd-find curl -y
-
 # ubuntu apt neovim setup
-sudo apt install gcc g++ unzip -y
-
-# ubuntu terminal and multiplexer setup
-sudo apt install alacritty tmux -y
+sudo apt install gcc g++ unzip alacritty tmux ripgrep fd-find curl -y
 
 # Download alacritty themes
 mkdir -p ~/.config/alacritty/themes
@@ -83,10 +77,13 @@ git clone https://github.com/alacritty/alacritty-theme ~/.config/alacritty/theme
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # ubuntu brew for vim and neovim setup
-brew install fzf starship
+brew install fzf starship lazygit
 
-# ubuntu brew for neovim setup
-brew install neovim go lazygit
+# Install Node Version Manager and latest Node.js LTS
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install --lts
 
 # create symbolic link to neovim from vim when not using neovim on
 # Ubuntu systems, because I use the v alias everywhere.
