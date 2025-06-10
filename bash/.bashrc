@@ -4,10 +4,12 @@
 
 # ~~~~~~~~ Bash Profiling ~~~~~~~~~~
 
-#PS4='+ $EPOCHREALTIME\011 '
-#timestamp=$(date +"%Y%m%d_%H%M%S")
-#exec 3>&2 2>/tmp/bashstart_${timestamp}_$$.log
-#set -x
+PS4='+ $EPOCHREALTIME\011 '
+START_TIME=$EPOCHREALTIME
+echo ".bashrc started at: $START_TIME"
+timestamp=$(date +"%Y%m%d_%H%M%S")
+exec 3>&2 2>/tmp/bashstart_${timestamp}_$$.log
+set -x
 
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
@@ -142,8 +144,6 @@ fi
 
 # ~~~~~~~~~~~~~~~ Prompt ~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Moved to starship 20-03-2024 for all my prompt needs.
-
 eval "$(starship init bash)"
 
 # ~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,7 +221,6 @@ alias e='exit'
 alias syu='sudo pacman -Syu'
 
 # Azure
-
 alias sub='az account set -s'
 
 # dotnet
@@ -317,23 +316,20 @@ else
   eval "$(fzf --bash)"
 fi
 
+# Mise-en-place
+eval "$(mise activate bash)"
+
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
 export PATH="/home/brad/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-
 # ~~~~~~~~ Profiling ~~~~~~~~~
 
-#set +x
-#exec 2>&3 3>&-
-#
-#
-#START_TIME=$EPOCHREALTIME
-#END_TIME=$EPOCHREALTIME
-#ELAPSED_MS=$(printf "%.0f" $(echo "($END_TIME - $START_TIME) * 1000" | bc))
-#
-#
-#echo "Bash startup took $ELAPSED_MS ms"
+set +x
+exec 2>&3 3>&-
+
+END_TIME=$EPOCHREALTIME
+echo ".bashrc finished at: $END_TIME"
+ELAPSED_MS=$(printf "%.0f" $(echo "($END_TIME - $START_TIME) * 1000" | bc))
+
+echo "Bash startup took $ELAPSED_MS ms"
